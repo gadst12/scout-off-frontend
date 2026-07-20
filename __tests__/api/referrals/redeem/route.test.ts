@@ -2,14 +2,27 @@
 jest.mock('@/lib/referralStore', () => ({
   redeemCode: jest.fn(),
 }));
+jest.mock('@/lib/sessionStore', () => ({
+  getValidSession: jest.fn(),
+}));
 
 import { POST } from '../../../../app/api/referrals/redeem/route';
 import { NextRequest } from 'next/server';
 import { redeemCode } from '@/lib/referralStore';
+import { getValidSession } from '@/lib/sessionStore';
 
 const mockRedeemCode = redeemCode as jest.Mock;
+const mockGetValidSession = getValidSession as jest.Mock;
 
+const SESSION_ID = 'session-abc-123';
 const SCOUT_WALLET = 'GSCOUTWALLET00000000000000000000000000000000000000000000';
+const VALID_SESSION = {
+  id: SESSION_ID,
+  publicKey: SCOUT_WALLET,
+  createdAt: 1700000000000,
+  expiresAt: 1700086400000,
+  revoked: false,
+};
 
 function makeRequest(
   options: {
@@ -45,15 +58,35 @@ describe('POST /api/referrals/redeem — unauthenticated', () => {
 
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({ error: 'Unauthorized' });
+    expect(mockGetValidSession).not.toHaveBeenCalled();
+    expect(mockRedeemCode).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 when the session cookie does not resolve to a valid session', async () => {
+    mockGetValidSession.mockReturnValue(null);
+
+    const res = await POST(
+      makeRequest({
+        cookieHeader: `session=${SESSION_ID}`,
+        body: { code: 'SCOUT-AB12CD' },
+      }),
+    );
+
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: 'Unauthorized' });
     expect(mockRedeemCode).not.toHaveBeenCalled();
   });
 });
 
 describe('POST /api/referrals/redeem — malformed body', () => {
+  beforeEach(() => {
+    mockGetValidSession.mockReturnValue(VALID_SESSION);
+  });
+
   it('returns 400 when the body is not valid JSON', async () => {
     const res = await POST(
       makeRequest({
-        cookieHeader: `session=${SCOUT_WALLET}`,
+        cookieHeader: `session=${SESSION_ID}`,
         rawBody: '{not valid json',
       }),
     );
@@ -65,7 +98,7 @@ describe('POST /api/referrals/redeem — malformed body', () => {
 
   it('returns 400 when the body has no code field', async () => {
     const res = await POST(
-      makeRequest({ cookieHeader: `session=${SCOUT_WALLET}`, body: {} }),
+      makeRequest({ cookieHeader: `session=${SESSION_ID}`, body: {} }),
     );
 
     expect(res.status).toBe(400);
@@ -76,7 +109,7 @@ describe('POST /api/referrals/redeem — malformed body', () => {
   it('returns 400 when code is an empty string', async () => {
     const res = await POST(
       makeRequest({
-        cookieHeader: `session=${SCOUT_WALLET}`,
+        cookieHeader: `session=${SESSION_ID}`,
         body: { code: '' },
       }),
     );
@@ -88,7 +121,7 @@ describe('POST /api/referrals/redeem — malformed body', () => {
 
   it('returns 400 when the request has no body at all', async () => {
     const res = await POST(
-      makeRequest({ cookieHeader: `session=${SCOUT_WALLET}` }),
+      makeRequest({ cookieHeader: `session=${SESSION_ID}` }),
     );
 
     expect(res.status).toBe(400);
@@ -98,11 +131,12 @@ describe('POST /api/referrals/redeem — malformed body', () => {
 
 describe('POST /api/referrals/redeem — invalid or already-used code', () => {
   it('returns 404 when redeemCode reports the code could not be redeemed', async () => {
+    mockGetValidSession.mockReturnValue(VALID_SESSION);
     mockRedeemCode.mockReturnValue(false);
 
     const res = await POST(
       makeRequest({
-        cookieHeader: `session=${SCOUT_WALLET}`,
+        cookieHeader: `session=${SESSION_ID}`,
         body: { code: 'SCOUT-BADCOD' },
       }),
     );
@@ -117,11 +151,12 @@ describe('POST /api/referrals/redeem — invalid or already-used code', () => {
 
 describe('POST /api/referrals/redeem — happy path', () => {
   it('returns 200 and success:true when redeemCode succeeds', async () => {
+    mockGetValidSession.mockReturnValue(VALID_SESSION);
     mockRedeemCode.mockReturnValue(true);
 
     const res = await POST(
       makeRequest({
-        cookieHeader: `session=${SCOUT_WALLET}`,
+        cookieHeader: `session=${SESSION_ID}`,
         body: { code: 'SCOUT-AB12CD' },
       }),
     );

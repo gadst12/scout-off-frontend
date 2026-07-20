@@ -3,15 +3,28 @@ jest.mock('@/lib/referralStore', () => ({
   getReferralCount: jest.fn(),
   getCodesByScout: jest.fn(),
 }));
+jest.mock('@/lib/sessionStore', () => ({
+  getValidSession: jest.fn(),
+}));
 
 import { GET } from '../../../../app/api/referrals/count/route';
 import { NextRequest } from 'next/server';
 import { getReferralCount, getCodesByScout } from '@/lib/referralStore';
+import { getValidSession } from '@/lib/sessionStore';
 
 const mockGetReferralCount = getReferralCount as jest.Mock;
 const mockGetCodesByScout = getCodesByScout as jest.Mock;
+const mockGetValidSession = getValidSession as jest.Mock;
 
+const SESSION_ID = 'session-abc-123';
 const SCOUT_WALLET = 'GSCOUTWALLET00000000000000000000000000000000000000000000';
+const VALID_SESSION = {
+  id: SESSION_ID,
+  publicKey: SCOUT_WALLET,
+  createdAt: 1700000000000,
+  expiresAt: 1700086400000,
+  revoked: false,
+};
 
 function makeRequest(cookieHeader?: string): NextRequest {
   const headers: Record<string, string> = {};
@@ -32,11 +45,24 @@ describe('GET /api/referrals/count', () => {
 
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({ error: 'Unauthorized' });
+    expect(mockGetValidSession).not.toHaveBeenCalled();
+    expect(mockGetCodesByScout).not.toHaveBeenCalled();
+    expect(mockGetReferralCount).not.toHaveBeenCalled();
+  });
+
+  it('returns 401 when the session cookie does not resolve to a valid session', async () => {
+    mockGetValidSession.mockReturnValue(null);
+
+    const res = await GET(makeRequest(`session=${SESSION_ID}`));
+
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: 'Unauthorized' });
     expect(mockGetCodesByScout).not.toHaveBeenCalled();
     expect(mockGetReferralCount).not.toHaveBeenCalled();
   });
 
   it('returns totalCodes and successfulReferrals for the authenticated scout', async () => {
+    mockGetValidSession.mockReturnValue(VALID_SESSION);
     mockGetCodesByScout.mockReturnValue([
       {
         code: 'SCOUT-AAA111',
@@ -62,7 +88,7 @@ describe('GET /api/referrals/count', () => {
     ]);
     mockGetReferralCount.mockReturnValue(2);
 
-    const res = await GET(makeRequest(`session=${SCOUT_WALLET}`));
+    const res = await GET(makeRequest(`session=${SESSION_ID}`));
 
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
@@ -74,10 +100,11 @@ describe('GET /api/referrals/count', () => {
   });
 
   it('returns zeros for a scout with no codes generated yet', async () => {
+    mockGetValidSession.mockReturnValue(VALID_SESSION);
     mockGetCodesByScout.mockReturnValue([]);
     mockGetReferralCount.mockReturnValue(0);
 
-    const res = await GET(makeRequest(`session=${SCOUT_WALLET}`));
+    const res = await GET(makeRequest(`session=${SESSION_ID}`));
 
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
