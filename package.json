@@ -2,6 +2,9 @@
   "name": "scout-off-frontend",
   "version": "0.1.0",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -17,7 +20,10 @@
     "postbuild": "next-sitemap",
     "generate:icons": "node scripts/generate-icons.js",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "indexer:build": "npm run build --workspace=packages/indexer",
+    "indexer:start": "npm run start --workspace=packages/indexer",
+    "indexer:test": "npm run test --workspace=packages/indexer"
   },
   "dependencies": {
     "@albedo-link/intent": "^0.13.0",
