@@ -77,3 +77,9 @@ export function startServer(): void {
     console.log(`Indexer server listening on port ${PORT}`);
   });
 }
+
+// Only auto-start when run directly (e.g. `node dist/server.js`), not when
+// imported by tests or other modules.
+if (require.main === module) {
+  startServer();
+}

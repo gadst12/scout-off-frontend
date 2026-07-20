@@ -1,0 +1,25 @@
+{
+  "name": "@scout-off/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Off-chain event indexer for the ScoutOff platform. Subscribes to Soroban contract events and exposes an HTTP server for health checks and Prometheus-compatible metrics.",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "jest --passWithNoTests"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "12.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "29.5.5",
+    "@types/node": "20.14.2",
+    "jest": "29.7.0",
+    "ts-jest": "^29.4.11",
+    "typescript": "^6.0.3"
+  }
+}

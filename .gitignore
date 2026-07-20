@@ -3,6 +3,7 @@
 .next/
 node_modules/
 out/
+dist/
 *.tsbuildinfo
 # Jest coverage output (issue #108)
 coverage/

@@ -369,12 +369,16 @@ scrape_configs:
 
 ## Tests
 
-```bash
-# Run indexer tests only (from repo root)
-npx jest packages/indexer --no-coverage
+The indexer has its own `package.json` and Jest config, so it can be tested
+independently of the Next.js app:
 
-# Run with coverage
-npx jest packages/indexer --coverage
+```bash
+# From this package directory
+cd packages/indexer
+npm test
+
+# Or from the repo root, targeting just this workspace
+npm run indexer:test
 ```
 
 Test files live in:
