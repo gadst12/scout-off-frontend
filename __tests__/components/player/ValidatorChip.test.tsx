@@ -121,7 +121,9 @@ describe('ValidatorChip — unknown status (checkIsValidator failure)', () => {
     // Status text is suppressed for both 'loading' and 'unknown' states.
     expect(screen.queryByText('Active validator')).not.toBeInTheDocument();
     expect(screen.queryByText('Former validator')).not.toBeInTheDocument();
-    expect(screen.queryByText('Validator status unknown')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Validator status unknown'),
+    ).not.toBeInTheDocument();
 
     // But the address is still shown, and the accessible name falls back to
     // "<status> · <truncated address>" since no milestone count is available.
