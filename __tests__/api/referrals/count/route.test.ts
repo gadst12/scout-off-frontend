@@ -38,9 +38,27 @@ describe('GET /api/referrals/count', () => {
 
   it('returns totalCodes and successfulReferrals for the authenticated scout', async () => {
     mockGetCodesByScout.mockReturnValue([
-      { code: 'SCOUT-AAA111', scoutWallet: SCOUT_WALLET, createdAt: 1, usedBy: null, usedAt: null },
-      { code: 'SCOUT-BBB222', scoutWallet: SCOUT_WALLET, createdAt: 2, usedBy: 'GX', usedAt: 3 },
-      { code: 'SCOUT-CCC333', scoutWallet: SCOUT_WALLET, createdAt: 4, usedBy: 'GY', usedAt: 5 },
+      {
+        code: 'SCOUT-AAA111',
+        scoutWallet: SCOUT_WALLET,
+        createdAt: 1,
+        usedBy: null,
+        usedAt: null,
+      },
+      {
+        code: 'SCOUT-BBB222',
+        scoutWallet: SCOUT_WALLET,
+        createdAt: 2,
+        usedBy: 'GX',
+        usedAt: 3,
+      },
+      {
+        code: 'SCOUT-CCC333',
+        scoutWallet: SCOUT_WALLET,
+        createdAt: 4,
+        usedBy: 'GY',
+        usedAt: 5,
+      },
     ]);
     mockGetReferralCount.mockReturnValue(2);
 

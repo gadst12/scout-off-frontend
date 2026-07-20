@@ -11,12 +11,16 @@ const mockRedeemCode = redeemCode as jest.Mock;
 
 const SCOUT_WALLET = 'GSCOUTWALLET00000000000000000000000000000000000000000000';
 
-function makeRequest(options: {
-  cookieHeader?: string;
-  body?: unknown;
-  rawBody?: string;
-} = {}): NextRequest {
-  const headers: Record<string, string> = { 'content-type': 'application/json' };
+function makeRequest(
+  options: {
+    cookieHeader?: string;
+    body?: unknown;
+    rawBody?: string;
+  } = {},
+): NextRequest {
+  const headers: Record<string, string> = {
+    'content-type': 'application/json',
+  };
   if (options.cookieHeader) headers['cookie'] = options.cookieHeader;
 
   return new NextRequest('http://localhost:3000/api/referrals/redeem', {
@@ -71,7 +75,10 @@ describe('POST /api/referrals/redeem — malformed body', () => {
 
   it('returns 400 when code is an empty string', async () => {
     const res = await POST(
-      makeRequest({ cookieHeader: `session=${SCOUT_WALLET}`, body: { code: '' } }),
+      makeRequest({
+        cookieHeader: `session=${SCOUT_WALLET}`,
+        body: { code: '' },
+      }),
     );
 
     expect(res.status).toBe(400);
@@ -80,7 +87,9 @@ describe('POST /api/referrals/redeem — malformed body', () => {
   });
 
   it('returns 400 when the request has no body at all', async () => {
-    const res = await POST(makeRequest({ cookieHeader: `session=${SCOUT_WALLET}` }));
+    const res = await POST(
+      makeRequest({ cookieHeader: `session=${SCOUT_WALLET}` }),
+    );
 
     expect(res.status).toBe(400);
     expect(mockRedeemCode).not.toHaveBeenCalled();
